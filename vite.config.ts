@@ -2,6 +2,19 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react-swc';
 import path from 'path';
 
+// 👇 Build a robust allowedHosts list (includes Render URL if it changes)
+const allowedHosts: string[] = [
+  'harphrmsystem.onrender.com', // previous hostname
+  'hrm-harp.onrender.com',      // current hostname
+];
+
+if (process.env.RENDER_EXTERNAL_URL) {
+  try {
+    const h = new URL(process.env.RENDER_EXTERNAL_URL).hostname;
+    if (h && !allowedHosts.includes(h)) allowedHosts.push(h);
+  } catch {}
+}
+
 export default defineConfig({
   plugins: [react()],
   resolve: {
@@ -52,18 +65,15 @@ export default defineConfig({
   },
   build: {
     target: 'esnext',
-    outDir: 'build',
+    outDir: 'build', // keep if you're previewing 'build' (see start script below)
   },
   server: {
     port: 3000,
     open: true,
   },
-
-  // 👇 Add this block for Render/Vite Preview
   preview: {
     host: true,
-    // Render injects PORT at runtime; the CLI flag can also override this
-    port: 4173,
-    allowedHosts: ['hrm-harp.onrender.com'],
+    port: 4173,                 // Render will override with $PORT
+    allowedHosts,               // 👈 includes hrm-harp.onrender.com
   },
 });
